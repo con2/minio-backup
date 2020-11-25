@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: !Var bucket_name
+  labels: !Var deployment_labels
+spec:
+  selector:
+    matchLabels: !Var deployment_labels
+  template:
+    metadata:
+      labels: !Var deployment_labels
+    spec:
+      enableServiceLinks: false
+      securityContext: !Var pod_security_context
+      initContainers:
+        - name: config
+          image: !Var minio_mc_image
+          securityContext: !Var container_security_context
+          command: ["/bin/sh"]
+          args:
+            - -c
+            - !Format mc alias set minio "{minio_url}" "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY"
+          env:
+            - name: HOME
+              value: /tmp
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: minio-backup
+                  key: accessKeyId
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-backup
+                  key: secretAccessKey
+          volumeMounts:
+            - mountPath: /tmp
+              name: temp
+      containers:
+        - name: mirror
+          image: !Var minio_mc_image
+          securityContext: !Var container_security_context
+          env:
+            - name: HOME
+              value: /tmp
+          args:
+            - mirror
+            - --watch
+            - !Format "minio/{bucket_name}"
+            - !Format "/mnt/target/{bucket_name}"
+          volumeMounts:
+            - mountPath: /mnt/target
+              name: target
+            - mountPath: /tmp
+              name: temp
+      volumes:
+        - name: temp
+          emptyDir: {}
+        - !If
+            test: !Var nfs_server
+            then:
+              name: target
+              nfs:
+                server: !Var nfs_server
+                path: !Var nfs_path
+            else:
+              name: target
+              emptyDir: {}

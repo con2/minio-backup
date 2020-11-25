@@ -1,0 +1,8 @@
+minio_url: http://minio.minio.svc.cluster.local:9000
+
+minio_source_buckets:
+  - outline
+  - outlinetracon
+  - outlinekuplii
+
+minio_secret_managed: false

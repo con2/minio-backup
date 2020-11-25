@@ -1,0 +1,9 @@
+!If
+  test: !Var minio_secret_managed
+  then: !Include secret.in.yaml
+---
+!Loop
+  over: !Var minio_source_buckets
+  as: bucket_name
+  template: !Include deployment.in.yaml
+  as_documents: true

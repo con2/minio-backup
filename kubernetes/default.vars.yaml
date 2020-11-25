@@ -1,0 +1,35 @@
+minio_url: http://minio
+minio_mc_image: minio/mc
+
+# don't set access key/secret if minio_secret_managed: false
+minio_secret_managed: true
+minio_access_key_id: ''
+minio_secret_access_key: ''
+
+minio_source_buckets:
+  - example
+
+# Empty: "backed up" to emptyDir
+# Nonempty: backed up to that NFS server
+nfs_server: ''
+nfs_path: '/'
+
+pod_security_context:
+  runAsUser: 1082
+  runAsGroup: 1082
+  fsGroup: 1082
+container_security_context:
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+common_labels:
+  app.kubernetes.io/component: backup
+  app.kubernetes.io/part-of: minio-backup
+
+secret_labels: !Merge
+  - app.kubernetes.io/name: minio-backup
+  - !Var common_labels
+
+deployment_labels: !Merge
+  - app.kubernetes.io/name: !Var bucket_name
+  - !Var common_labels

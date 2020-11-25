@@ -1,0 +1,5 @@
+minio_url: https://minio.con2.fi
+minio_access_key_id: example
+minio_secret_access_key: secret
+minio_source_buckets:
+  - outline
